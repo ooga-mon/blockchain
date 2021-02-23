@@ -14,7 +14,10 @@ type Article struct {
 	Content string `json:"content"`
 }
 
-var articles []Article
+var articles = []Article{
+	{Title: "Hello", Desc: "Article Description", Content: "Article Content"},
+	{Title: "Hello 2", Desc: "Article Description", Content: "Article Content"},
+}
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome to the HomePage!")
