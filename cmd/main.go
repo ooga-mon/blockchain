@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"blockchain/app/api"
+	"github.com/ooga-mon/blockchain/api"
 )
 
 const HTTP_PORT = "8081"
