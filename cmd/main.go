@@ -13,6 +13,7 @@ var server app.Server
 
 func handleRequests() {
 	http.HandleFunc("/blocks", server.GetBlockChain)
+	http.HandleFunc("/mine", server.MineBlock)
 	err := http.ListenAndServe(":"+HTTP_PORT, nil)
 	if err != nil {
 		log.Print(err)
