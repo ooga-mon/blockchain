@@ -2,6 +2,7 @@ package node
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,19 +10,13 @@ import (
 )
 
 func (s *Node) GetBlockChain(w http.ResponseWriter, r *http.Request) {
-	rsp, err := json.Marshal(s.db)
-	if err != nil {
-		fmt.Print(err)
-		writeResponseMessage(w, "Error retrieving blockchain.", http.StatusInternalServerError)
-		return
-	}
+	writeResponse(w, s.db.Blocks, http.StatusOK)
 	fmt.Println("Retrieved blocks.")
-	w.Write(rsp)
 }
 
 func (s *Node) MineBlock(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
-		writeResponseMessage(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
+		writeErrorResponse(w, errors.New("Content Type is not application/json"), http.StatusUnsupportedMediaType)
 		return
 	}
 
@@ -31,28 +26,11 @@ func (s *Node) MineBlock(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&payload)
 	if err != nil {
-		writeResponseMessage(w, "Bad Request: "+err.Error(), http.StatusBadRequest)
+		writeErrorResponse(w, err, http.StatusBadRequest)
 		return
 	}
 
 	block := s.db.AddBlock(payload)
-
-	blockJson, err := json.Marshal(block)
-	if err != nil {
-		fmt.Print(err)
-		writeResponseMessage(w, "Block added to chain. Error creating new block response. Check using GET block request.", http.StatusInternalServerError)
-		return
-	}
-
+	writeResponse(w, block, http.StatusOK)
 	fmt.Println("New block added.")
-	w.Write(blockJson)
-}
-
-func writeResponseMessage(w http.ResponseWriter, message string, httpStatusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatusCode)
-	resp := make(map[string]string)
-	resp["message"] = message
-	jsonResp, _ := json.Marshal(resp)
-	w.Write(jsonResp)
 }
