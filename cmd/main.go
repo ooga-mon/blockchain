@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ooga-mon/blockchain/app"
+	"github.com/ooga-mon/blockchain/node"
 )
+
+type flagParams struct {
+}
 
 const HTTP_PORT = "8081"
 
-var server app.Server
+var server node.Server
 
-func startServers() {
+func serverHttp() {
 	http.HandleFunc("/blocks", server.GetBlockChain)
 	http.HandleFunc("/mine", server.MineBlock)
 	err := http.ListenAndServe(":"+HTTP_PORT, nil)
@@ -22,6 +25,6 @@ func startServers() {
 }
 
 func main() {
-	server = app.NewServer()
-	startServers()
+	server = node.NewServer()
+	serverHttp()
 }
