@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"github.com/ooga-mon/blockchain/app"
-	"github.com/ooga-mon/blockchain/internal/database"
 )
 
 const HTTP_PORT = "8081"
 
-var server = app.Server{}
+var server app.Server
 
 func handleRequests() {
 	http.HandleFunc("/blocks", server.GetBlockChain)
@@ -21,6 +20,6 @@ func handleRequests() {
 }
 
 func main() {
-	server.Chain = database.NewBlockchain()
+	server = app.NewServer()
 	handleRequests()
 }

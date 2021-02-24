@@ -12,6 +12,10 @@ type Server struct {
 	Chain database.Blockchain
 }
 
+func NewServer() Server {
+	return Server{database.NewBlockchain()}
+}
+
 func (s *Server) GetBlockChain(w http.ResponseWriter, r *http.Request) {
 	rsp, err := json.Marshal(s.Chain)
 	if err != nil {
