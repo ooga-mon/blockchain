@@ -15,7 +15,7 @@ func (s *Node) getBlockChain(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Node) mineBlock(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
+	if r.Header.Get("Content-Type") != CONTENT_TYPE {
 		writeErrorResponse(w, errors.New("Content Type is not application/json"), http.StatusUnsupportedMediaType)
 		return
 	}
@@ -33,4 +33,8 @@ func (s *Node) mineBlock(w http.ResponseWriter, r *http.Request) {
 	block := s.db.AddBlock(payload)
 	writeResponse(w, block, http.StatusOK)
 	fmt.Println("New block added.")
+}
+
+func (s *Node) addPeer(w http.ResponseWriter, r *http.Request) {
+
 }
