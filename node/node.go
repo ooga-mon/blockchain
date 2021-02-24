@@ -45,9 +45,9 @@ func (n *Node) Start() {
 func (n *Node) serverHttp() {
 	http.HandleFunc("/blocks", n.GetBlockChain)
 	http.HandleFunc("/mine", n.MineBlock)
+	fmt.Printf("Listening for requests on port: %d.", n.info.Port)
 	err := http.ListenAndServe(":"+strconv.FormatUint(n.info.Port, 10), nil)
 	if err != nil {
 		fmt.Print(err)
 	}
-	fmt.Printf("Listening for requests on port: %d.", n.info.Port)
 }
