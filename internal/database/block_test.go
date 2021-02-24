@@ -10,7 +10,7 @@ import (
 func TestNewBlock(t *testing.T) {
 	blockParentHash := [32]byte{}
 	time := time.Date(2021, time.February, 13, 20, 0, 0, 0, time.UTC)
-	const blockHash = "45b595087e52857385717d13224dfa14e4ce6bf4dded780f3e2a2ce6e77597d7"
+	const blockHash = "9ff955fe117ddc51a11409ba6a82b25c21f4d6c23c8a90dc98b240f5284d1d71"
 	const blockPayload = "test1"
 	payload := Payload{[]string{blockPayload}}
 	block := NewBlock(blockParentHash, time, 0, payload)

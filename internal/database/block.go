@@ -2,8 +2,7 @@ package database
 
 import (
 	"crypto/sha256"
-	"strconv"
-	"strings"
+	"encoding/json"
 	"time"
 )
 
@@ -13,7 +12,7 @@ type Block struct {
 }
 
 type BlockHeader struct {
-	ParentHash [32]byte
+	ParentHash Hash
 	Timestamp  time.Time
 	Number     uint64
 }
@@ -23,11 +22,11 @@ type Payload struct {
 }
 
 type BlockEntity struct {
-	Key   [32]byte
+	Key   Hash
 	Value Block
 }
 
-func NewBlock(parentHash [32]byte, time time.Time, number uint64, payload Payload) Block {
+func NewBlock(parentHash Hash, time time.Time, number uint64, payload Payload) Block {
 	header := BlockHeader{parentHash, time, number}
 	return Block{header, payload}
 }
@@ -36,22 +35,11 @@ func NewBlockEntity(block Block) BlockEntity {
 	return BlockEntity{block.Hash(), block}
 }
 
-func (b Block) Hash() [32]byte {
-	return sha256.Sum256([]byte(b.contentAsBytes()))
-}
-
-func (b Block) contentAsBytes() string {
-	return b.BlockHeader.toBytes() + b.Payload.toBytes()
-}
-
-func (bh BlockHeader) toBytes() string {
-	return string(bh.ParentHash[:]) + time.Time.String(bh.Timestamp) + strconv.FormatUint(bh.Number, 10)
-}
-
-func (p Payload) toBytes() string {
-	sb := strings.Builder{}
-	for _, val := range p.Data {
-		sb.WriteString(val)
+func (b Block) Hash() Hash {
+	jsonBlock, err := json.Marshal(b)
+	if err != nil {
+		return Hash{}
 	}
-	return sb.String()
+
+	return sha256.Sum256(jsonBlock)
 }
