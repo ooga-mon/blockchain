@@ -45,8 +45,8 @@ func (n *Node) Start(ctx context.Context) error {
 func (n *Node) serverHttp(ctx context.Context) error {
 	handler := http.NewServeMux()
 
-	handler.HandleFunc("/blocks", n.GetBlockChain)
-	handler.HandleFunc("/mine", n.MineBlock)
+	handler.HandleFunc("/blocks", n.getBlockChain)
+	handler.HandleFunc("/mine", n.mineBlock)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
 	// This is to ensure the server is closed if/when the context signals done
