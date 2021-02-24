@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 
 	"github.com/ooga-mon/blockchain/node"
 )
@@ -12,5 +14,8 @@ func main() {
 	flag.Parse()
 
 	node := node.NewNode(*flagIP, *flagPort)
-	node.Start()
+	err := node.Start(context.Background())
+	if err != nil {
+		fmt.Println(err)
+	}
 }

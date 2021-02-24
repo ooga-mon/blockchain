@@ -1,9 +1,9 @@
 package node
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/ooga-mon/blockchain/internal/database"
 )
@@ -38,16 +38,30 @@ func NewNode(ip string, port uint64) *Node {
 	return node
 }
 
-func (n *Node) Start() {
-	n.serverHttp()
+func (n *Node) Start(ctx context.Context) error {
+	return n.serverHttp(ctx)
 }
 
-func (n *Node) serverHttp() {
-	http.HandleFunc("/blocks", n.GetBlockChain)
-	http.HandleFunc("/mine", n.MineBlock)
-	fmt.Printf("Listening for requests on port: %d.", n.info.Port)
-	err := http.ListenAndServe(":"+strconv.FormatUint(n.info.Port, 10), nil)
+func (n *Node) serverHttp(ctx context.Context) error {
+	handler := http.NewServeMux()
+
+	handler.HandleFunc("/blocks", n.GetBlockChain)
+	handler.HandleFunc("/mine", n.MineBlock)
+
+	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
+	// This is to ensure the server is closed if/when the context signals done
+	go func() {
+		<-ctx.Done()
+		server.Close()
+		fmt.Println("Server was closed.")
+	}()
+
+	fmt.Printf("Listening for requests on port: %d.\n", n.info.Port)
+	err := server.ListenAndServe()
 	if err != nil {
 		fmt.Print(err)
+		return err
 	}
+
+	return nil
 }
