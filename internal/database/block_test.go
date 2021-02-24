@@ -19,10 +19,10 @@ func TestNewBlock(t *testing.T) {
 	if hex.EncodeToString(hash[:]) != blockHash {
 		t.Errorf("block hash is improperly set. Input: %s, Expected: %s.", hex.EncodeToString(hash[:]), blockHash)
 	}
-	if block.blockHeader.parentHash != blockParentHash {
+	if block.BlockHeader.ParentHash != blockParentHash {
 		t.Errorf("block parentHash is improperly set. Should be empty")
 	}
-	if block.payload.data[0] != blockPayload {
-		t.Errorf("block payload is improperly set. Input: %s, Expected: %s.", block.payload.data[0], blockPayload)
+	if block.Payload.Data[0] != blockPayload {
+		t.Errorf("block payload is improperly set. Input: %s, Expected: %s.", block.Payload.Data[0], blockPayload)
 	}
 }

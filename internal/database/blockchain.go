@@ -5,7 +5,7 @@ import (
 )
 
 type Blockchain struct {
-	blocks []BlockEntity
+	Blocks []BlockEntity
 }
 
 func NewBlockchain() Blockchain {
@@ -13,26 +13,26 @@ func NewBlockchain() Blockchain {
 }
 
 func (bc *Blockchain) AddBlock(payload Payload) {
-	lastBlock := bc.blocks[len(bc.blocks)-1]
-	newBlock := NewBlock(lastBlock.key, time.Now(), lastBlock.value.blockHeader.number+1, payload)
-	bc.blocks = append(bc.blocks, NewBlockEntity(newBlock))
+	lastBlock := bc.Blocks[len(bc.Blocks)-1]
+	newBlock := NewBlock(lastBlock.Key, time.Now(), lastBlock.Value.BlockHeader.Number+1, payload)
+	bc.Blocks = append(bc.Blocks, NewBlockEntity(newBlock))
 }
 
 func (bc *Blockchain) IsValid() bool {
 	// We assume that a new blockchain, at a minimum, contains the genesis block
-	if len(bc.blocks) == 0 {
+	if len(bc.Blocks) == 0 {
 		return false
 	}
 	genesis := LoadGenesisBlockEntity()
-	if bc.blocks[0].key != genesis.key || bc.blocks[0].value.Hash() != genesis.key {
+	if bc.Blocks[0].Key != genesis.Key || bc.Blocks[0].Value.Hash() != genesis.Key {
 		return false
 	}
 
-	for i := 1; i < len(bc.blocks); i++ {
-		if bc.blocks[i].value.blockHeader.parentHash != bc.blocks[i-1].key {
+	for i := 1; i < len(bc.Blocks); i++ {
+		if bc.Blocks[i].Value.BlockHeader.ParentHash != bc.Blocks[i-1].Key {
 			return false
 		}
-		if bc.blocks[i].value.Hash() != bc.blocks[i].key {
+		if bc.Blocks[i].Value.Hash() != bc.Blocks[i].Key {
 			return false
 		}
 	}
@@ -41,13 +41,13 @@ func (bc *Blockchain) IsValid() bool {
 }
 
 func (bc *Blockchain) Replace(newChain *Blockchain) bool {
-	if len(newChain.blocks) <= len(bc.blocks) {
+	if len(newChain.Blocks) <= len(bc.Blocks) {
 		return false
 	}
 	if !newChain.IsValid() {
 		return false
 	}
 
-	bc.blocks = newChain.blocks
+	bc.Blocks = newChain.Blocks
 	return true
 }

@@ -8,23 +8,23 @@ import (
 )
 
 type Block struct {
-	blockHeader BlockHeader
-	payload     Payload
+	BlockHeader BlockHeader
+	Payload     Payload
 }
 
 type BlockHeader struct {
-	parentHash [32]byte
-	timestamp  time.Time
-	number     uint64
+	ParentHash [32]byte
+	Timestamp  time.Time
+	Number     uint64
 }
 
 type Payload struct {
-	data []string
+	Data []string
 }
 
 type BlockEntity struct {
-	key   [32]byte
-	value Block
+	Key   [32]byte
+	Value Block
 }
 
 func NewBlock(parentHash [32]byte, time time.Time, number uint64, payload Payload) Block {
@@ -41,16 +41,16 @@ func (b Block) Hash() [32]byte {
 }
 
 func (b Block) contentAsBytes() string {
-	return b.blockHeader.toBytes() + b.payload.toBytes()
+	return b.BlockHeader.toBytes() + b.Payload.toBytes()
 }
 
 func (bh BlockHeader) toBytes() string {
-	return string(bh.parentHash[:]) + time.Time.String(bh.timestamp) + strconv.FormatUint(bh.number, 10)
+	return string(bh.ParentHash[:]) + time.Time.String(bh.Timestamp) + strconv.FormatUint(bh.Number, 10)
 }
 
 func (p Payload) toBytes() string {
 	sb := strings.Builder{}
-	for _, val := range p.data {
+	for _, val := range p.Data {
 		sb.WriteString(val)
 	}
 	return sb.String()
