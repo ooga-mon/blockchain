@@ -1,30 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"flag"
 
 	"github.com/ooga-mon/blockchain/node"
 )
 
-type flagParams struct {
-}
-
-const HTTP_PORT = "8081"
-
-var server node.Server
-
-func serverHttp() {
-	http.HandleFunc("/blocks", server.GetBlockChain)
-	http.HandleFunc("/mine", server.MineBlock)
-	err := http.ListenAndServe(":"+HTTP_PORT, nil)
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Printf("Listening for requests on port: %s.", HTTP_PORT)
-}
-
 func main() {
-	server = node.NewServer()
-	serverHttp()
+	flagIP := *flag.String("ip", node.DefaultIP, "your node's public IP in the P2P network")
+	flagPort := *flag.Uint64("port", node.DefaultPort, "your node's public port in the P2P network")
+	flag.Parse()
+
+	node := node.NewNode(flagIP, flagPort)
+	node.Start()
 }

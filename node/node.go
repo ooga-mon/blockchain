@@ -1,66 +1,53 @@
 package node
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/ooga-mon/blockchain/internal/database"
 )
 
-type Server struct {
-	Chain database.Blockchain
+const DefaultIP = "127.0.0.1"
+const DefaultPort = 8081
+
+type ConnectionInfo struct {
+	IP   string
+	Port uint64
+
+	connected bool
 }
 
-func NewServer() Server {
-	return Server{database.NewBlockchain()}
+func NewConnectionInfo(ip string, port uint64, connected bool) ConnectionInfo {
+	return ConnectionInfo{ip, port, connected}
 }
 
-func (s *Server) GetBlockChain(w http.ResponseWriter, r *http.Request) {
-	rsp, err := json.Marshal(s.Chain)
+type Node struct {
+	// for now we will keep the blockchain in memory and persist it to a DB/persistent storage at a later time
+	db   database.Blockchain
+	info ConnectionInfo
+
+	peers map[string]ConnectionInfo
+}
+
+func NewNode(ip string, port uint64) *Node {
+	peers := map[string]ConnectionInfo{}
+
+	node := &Node{database.NewBlockchain(), NewConnectionInfo(ip, port, true), peers}
+
+	return node
+}
+
+func (n *Node) Start() {
+	n.serverHttp()
+}
+
+func (n *Node) serverHttp() {
+	http.HandleFunc("/blocks", n.GetBlockChain)
+	http.HandleFunc("/mine", n.MineBlock)
+	err := http.ListenAndServe(":"+strconv.FormatUint(n.info.Port, 10), nil)
 	if err != nil {
 		fmt.Print(err)
-		writeResponseMessage(w, "Error retrieving blockchain.", http.StatusInternalServerError)
-		return
 	}
-	fmt.Println("Retrieved blocks.")
-	w.Write(rsp)
-}
-
-func (s *Server) MineBlock(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
-		writeResponseMessage(w, "Content Type is not application/json", http.StatusUnsupportedMediaType)
-		return
-	}
-
-	var payload database.Payload
-
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	err := decoder.Decode(&payload)
-	if err != nil {
-		writeResponseMessage(w, "Bad Request: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	block := s.Chain.AddBlock(payload)
-
-	blockJson, err := json.Marshal(block)
-	if err != nil {
-		fmt.Print(err)
-		writeResponseMessage(w, "Block added to chain. Error creating new block response. Check using GET block request.", http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Println("New block added.")
-	w.Write(blockJson)
-}
-
-func writeResponseMessage(w http.ResponseWriter, message string, httpStatusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(httpStatusCode)
-	resp := make(map[string]string)
-	resp["message"] = message
-	jsonResp, _ := json.Marshal(resp)
-	w.Write(jsonResp)
+	fmt.Printf("Listening for requests on port: %d.", n.info.Port)
 }
