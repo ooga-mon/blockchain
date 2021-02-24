@@ -12,10 +12,11 @@ func NewBlockchain() Blockchain {
 	return Blockchain{[]BlockEntity{LoadGenesisBlockEntity()}}
 }
 
-func (bc *Blockchain) AddBlock(payload Payload) {
+func (bc *Blockchain) AddBlock(payload Payload) Block {
 	lastBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := NewBlock(lastBlock.Key, time.Now(), lastBlock.Value.BlockHeader.Number+1, payload)
 	bc.Blocks = append(bc.Blocks, NewBlockEntity(newBlock))
+	return newBlock
 }
 
 func (bc *Blockchain) IsValid() bool {
