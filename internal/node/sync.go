@@ -23,7 +23,9 @@ func (n *Node) doSync() {
 
 		peerStatus, err := n.postStatus(peer)
 		if err != nil {
+			fmt.Print("Removing peer from list.")
 			n.removePeer(peer)
+			continue
 		}
 
 		n.updateStatusDifferences(peerStatus)
