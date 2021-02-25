@@ -7,15 +7,15 @@ import (
 )
 
 type Block struct {
-	BlockHash Hash
-	Content   Content
+	BlockHash Hash    `json:"Hash"`
+	Content   Content `json:"Content"`
 }
 
 type Content struct {
-	ParentHash Hash
-	Timestamp  time.Time
-	Number     uint64
-	Tx         Transactions
+	ParentHash Hash         `json:"Parent_Hash"`
+	Timestamp  time.Time    `json:"Timestamp"`
+	Number     uint64       `json:"Number"`
+	Tx         Transactions `json:"Transactions"`
 }
 
 type Transactions struct {
