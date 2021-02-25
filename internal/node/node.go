@@ -50,7 +50,10 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 }
 
 func (n *Node) addPeer(con connectionInfo) {
-	n.peers[con.tcpAddress()] = con
+	if !n.containsPeer(con) {
+		fmt.Printf("Found new peer %s\n", con.tcpAddress())
+		n.peers[con.tcpAddress()] = con
+	}
 }
 
 func (n *Node) containsPeer(peer connectionInfo) bool {
@@ -68,7 +71,7 @@ func (n *Node) removePeer(peer connectionInfo) {
 }
 
 func (n *Node) Start(ctx context.Context) error {
-	go n.sync(ctx)
+	go n.postSync()
 
 	return n.serverHttp(ctx)
 }
@@ -78,8 +81,7 @@ func (n *Node) serverHttp(ctx context.Context) error {
 
 	handler.HandleFunc("/blocks", n.handlerGetBlockChain)
 	handler.HandleFunc("/mine", n.handlerMineBlock)
-	handler.HandleFunc("/node/peer", n.handlerAddPeer)
-	handler.HandleFunc("/node/status", n.handlerGetStatus)
+	handler.HandleFunc("/node/status", n.handlerPostStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
 	// This is to ensure the server is closed if/when the context signals done

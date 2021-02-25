@@ -1,6 +1,7 @@
 package node
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,7 +20,31 @@ type errResp struct {
 }
 
 type Status struct {
+	Info      connectionInfo
 	KnowPeers map[string]connectionInfo `json:"connection_info"`
+}
+
+func writeRequest(url string, content interface{}) (*http.Response, error) {
+	jsonContent, err := json.Marshal(content)
+	if err != nil {
+		return nil, err
+	}
+
+	return http.Post(url, "application/json", bytes.NewBuffer(jsonContent))
+}
+
+func readRequestBody(r *http.Request, reqBody interface{}) error {
+	reqBodyJson, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return fmt.Errorf("unable to read request body. %s", err.Error())
+	}
+
+	err = json.Unmarshal(reqBodyJson, reqBody)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal request body. %s", err.Error())
+	}
+
+	return nil
 }
 
 func writeResponse(w http.ResponseWriter, content interface{}, httpStatusCode int) error {
@@ -41,7 +66,7 @@ func writeErrorResponse(w http.ResponseWriter, err error, httpStatusCode int) {
 	w.Write((jsonError))
 }
 
-func readResponse(r *http.Response, reqBody interface{}) error {
+func readResponse(r *http.Response, respBody interface{}) error {
 	resBodyJson, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("unable to read response body. %s", err.Error())
@@ -52,7 +77,7 @@ func readResponse(r *http.Response, reqBody interface{}) error {
 		return fmt.Errorf("unable to process response. %s", string(resBodyJson))
 	}
 
-	err = json.Unmarshal(resBodyJson, reqBody)
+	err = json.Unmarshal(resBodyJson, respBody)
 	if err != nil {
 		return fmt.Errorf("unable to unmarshal response body. %s", err.Error())
 	}

@@ -1,28 +1,14 @@
 package node
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"time"
 )
 
-func (n *Node) sync(ctx context.Context) error {
-	n.doSync(ctx)
-
-	ticker := time.NewTicker(60 * time.Second)
-
-	for {
-		select {
-		case <-ticker.C:
-			n.doSync(ctx)
-		case <-ctx.Done():
-			ticker.Stop()
-		}
-	}
+func (n *Node) postSync() {
+	go n.doSync()
 }
 
-func (n *Node) doSync(ctx context.Context) {
+func (n *Node) doSync() {
 	fmt.Println("Attempting sync process")
 	for _, peer := range n.peers {
 		fmt.Printf("Starting sync process with %s\n", peer.tcpAddress())
@@ -35,20 +21,23 @@ func (n *Node) doSync(ctx context.Context) {
 			continue
 		}
 
-		status, err := getPeerStatus(peer)
+		peerStatus, err := n.postStatus(peer)
 		if err != nil {
 			n.removePeer(peer)
 		}
 
-		n.addUnknownPeers(status)
-
-		n.pushKnownPeers(peer)
+		n.updateStatusDifferences(peerStatus)
 	}
 }
 
-func getPeerStatus(peer connectionInfo) (Status, error) {
+func (n *Node) updateStatusDifferences(peerStatus Status) {
+	n.addUnknownPeers(peerStatus)
+}
+
+func (n *Node) postStatus(peer connectionInfo) (Status, error) {
 	url := fmt.Sprintf("http://%s/node/status", peer.tcpAddress())
-	res, err := http.Get(url)
+	nodeStatus := Status{n.info, n.peers}
+	res, err := writeRequest(url, nodeStatus)
 	if err != nil {
 		return Status{}, err
 	}
@@ -63,42 +52,10 @@ func getPeerStatus(peer connectionInfo) (Status, error) {
 }
 
 func (n *Node) addUnknownPeers(peerStatus Status) error {
+	n.addPeer(peerStatus.Info)
 	for _, unknownPeer := range peerStatus.KnowPeers {
-		if !n.containsPeer(unknownPeer) {
-			fmt.Printf("Found new peer %s\n", unknownPeer.tcpAddress())
-			n.addPeer(unknownPeer)
-		}
+		n.addPeer(unknownPeer)
 	}
-
-	return nil
-}
-
-func (n *Node) pushKnownPeers(peer connectionInfo) error {
-	if peer.connected {
-		return nil
-	}
-
-	url := fmt.Sprintf("http://%s/node/peer?ip=%s&port=%d", peer.tcpAddress(), n.info.IP, n.info.Port)
-
-	res, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	stdRes := StandardResponse{}
-	err = readResponse(res, stdRes)
-	if err != nil {
-		return err
-	}
-	if !stdRes.Success {
-		return fmt.Errorf(stdRes.Error)
-	}
-
-	knownPeer := n.peers[peer.tcpAddress()]
-	knownPeer.connected = stdRes.Success
-
-	// reassigns known peer back to map
-	n.addPeer(knownPeer)
 
 	return nil
 }

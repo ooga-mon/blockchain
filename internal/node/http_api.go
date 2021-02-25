@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/ooga-mon/blockchain/internal/database"
 )
@@ -45,37 +44,25 @@ func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("New block added.")
+
+	n.postSync()
 }
 
-func (n *Node) handlerAddPeer(w http.ResponseWriter, r *http.Request) {
-	peerIP := r.URL.Query().Get(queryKeyIP)
-	peerPortStr := r.URL.Query().Get(queryKeyPort)
-
-	peerPort, err := strconv.ParseUint(peerPortStr, 10, 32)
+func (n *Node) handlerPostStatus(w http.ResponseWriter, r *http.Request) {
+	peerStatus := Status{}
+	err := readRequestBody(r, &peerStatus)
 	if err != nil {
-		writeErrorResponse(w, err, http.StatusBadRequest)
 		return
 	}
 
-	peerCon := newConnectionInfo(peerIP, peerPort, true)
+	n.updateStatusDifferences(peerStatus)
 
-	n.addPeer(peerCon)
-
-	err = writeResponse(w, StandardResponse{true, ""}, http.StatusOK)
+	nodeStatus := Status{n.info, n.peers}
+	err = writeResponse(w, nodeStatus, http.StatusOK)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
-	fmt.Println("New peer added.")
-}
 
-func (n *Node) handlerGetStatus(w http.ResponseWriter, r *http.Request) {
-	nodeStatus := Status{n.peers}
-
-	err := writeResponse(w, nodeStatus, http.StatusOK)
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-	fmt.Println("Retrieved node status.")
+	fmt.Println("sent diff in status.")
 }
