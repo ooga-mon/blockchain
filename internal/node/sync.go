@@ -41,6 +41,8 @@ func (n *Node) doSync(ctx context.Context) {
 		}
 
 		n.addUnknownPeers(status)
+
+		n.pushKnownPeers(peer)
 	}
 }
 
@@ -67,6 +69,36 @@ func (n *Node) addUnknownPeers(peerStatus Status) error {
 			n.addPeer(unknownPeer)
 		}
 	}
+
+	return nil
+}
+
+func (n *Node) pushKnownPeers(peer connectionInfo) error {
+	if peer.connected {
+		return nil
+	}
+
+	url := fmt.Sprintf("http://%s/node/peer?ip=%s&port=%d", peer.tcpAddress(), n.info.IP, n.info.Port)
+
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	stdRes := StandardResponse{}
+	err = readResponse(res, stdRes)
+	if err != nil {
+		return err
+	}
+	if !stdRes.Success {
+		return fmt.Errorf(stdRes.Error)
+	}
+
+	knownPeer := n.peers[peer.tcpAddress()]
+	knownPeer.connected = stdRes.Success
+
+	// reassigns known peer back to map
+	n.addPeer(knownPeer)
 
 	return nil
 }
