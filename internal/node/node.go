@@ -10,6 +10,8 @@ import (
 
 const DefaultIP = "127.0.0.1"
 const DefaultPort = 8081
+const DefaultPeerIP = "127.0.0.1"
+const DefaultPeerPort = 8081
 
 type connectionInfo struct {
 	IP   string
@@ -22,7 +24,7 @@ func newConnectionInfo(ip string, port uint64, connected bool) connectionInfo {
 	return connectionInfo{ip, port, connected}
 }
 
-func (con *connectionInfo) TcpAddress() string {
+func (con *connectionInfo) tcpAddress() string {
 	return fmt.Sprintf("%s:%d", con.IP, con.Port)
 }
 
@@ -34,8 +36,12 @@ type Node struct {
 	peers map[string]connectionInfo
 }
 
-func NewNode(ip string, port uint64) *Node {
+func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort uint64) *Node {
 	peers := map[string]connectionInfo{}
+	if bootstrapPeerIP != ip && bootstrapPeerPort != port {
+		bootstrapCon := newConnectionInfo(bootstrapPeerIP, bootstrapPeerPort, false)
+		peers[bootstrapCon.tcpAddress()] = bootstrapCon
+	}
 
 	node := &Node{database.NewBlockchain(), newConnectionInfo(ip, port, true), peers}
 
@@ -43,7 +49,7 @@ func NewNode(ip string, port uint64) *Node {
 }
 
 func (n *Node) addPeer(con connectionInfo) {
-	n.peers[con.TcpAddress()] = con
+	n.peers[con.tcpAddress()] = con
 }
 
 func (n *Node) Start(ctx context.Context) error {
