@@ -34,11 +34,12 @@ func (n *Node) doSync() {
 
 func (n *Node) updateStatusDifferences(peerStatus Status) {
 	n.addUnknownPeers(peerStatus)
+	n.db.Replace(&peerStatus.Blockchain)
 }
 
 func (n *Node) postStatus(peer connectionInfo) (Status, error) {
 	url := fmt.Sprintf("http://%s/node/status", peer.tcpAddress())
-	nodeStatus := Status{n.info, n.peers}
+	nodeStatus := Status{n.info, n.peers, n.db}
 	res, err := writeRequest(url, nodeStatus)
 	if err != nil {
 		return Status{}, err

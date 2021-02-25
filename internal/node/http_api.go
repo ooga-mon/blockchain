@@ -57,7 +57,7 @@ func (n *Node) handlerPostStatus(w http.ResponseWriter, r *http.Request) {
 
 	n.updateStatusDifferences(peerStatus)
 
-	nodeStatus := Status{n.info, n.peers}
+	nodeStatus := Status{n.info, n.peers, n.db}
 	err = writeResponse(w, nodeStatus, http.StatusOK)
 	if err != nil {
 		fmt.Print(err)

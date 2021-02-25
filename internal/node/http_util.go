@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/ooga-mon/blockchain/internal/database"
 )
 
 const CONTENT_TYPE = "application/json"
@@ -20,8 +22,9 @@ type errResp struct {
 }
 
 type Status struct {
-	Info      connectionInfo            `json:"Info"`
-	KnowPeers map[string]connectionInfo `json:"Known_Peers"`
+	Info       connectionInfo            `json:"Info"`
+	KnowPeers  map[string]connectionInfo `json:"Known_Peers"`
+	Blockchain database.Blockchain       `json:"Blockchain"` //TODO switch this to be the last block info instead of the whole chain each time
 }
 
 func writeRequest(url string, content interface{}) (*http.Response, error) {
