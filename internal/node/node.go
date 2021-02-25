@@ -14,8 +14,8 @@ const DefaultPeerIP = "127.0.0.1"
 const DefaultPeerPort = 8080
 
 type connectionInfo struct {
-	IP   string
-	Port uint64
+	IP   string `json:"IP"`
+	Port uint64 `json:"Port"`
 
 	connected bool
 }

@@ -5,17 +5,17 @@ import (
 )
 
 type Blockchain struct {
-	Blocks []BlockEntity
+	Blocks []Block `json:"blocks"`
 }
 
 func NewBlockchain() Blockchain {
-	return Blockchain{[]BlockEntity{LoadGenesisBlockEntity()}}
+	return Blockchain{[]Block{loadGenesisBlock()}}
 }
 
-func (bc *Blockchain) AddBlock(payload Payload) Block {
+func (bc *Blockchain) AddBlock(Tx Transactions) Block {
 	lastBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(lastBlock.Key, time.Now(), lastBlock.Value.BlockHeader.Number+1, payload)
-	bc.Blocks = append(bc.Blocks, NewBlockEntity(newBlock))
+	newBlock := NewBlock(lastBlock.BlockHash, time.Now(), lastBlock.Content.Number+1, Tx)
+	bc.Blocks = append(bc.Blocks, newBlock)
 	return newBlock
 }
 
@@ -24,16 +24,16 @@ func (bc *Blockchain) IsValid() bool {
 	if len(bc.Blocks) == 0 {
 		return false
 	}
-	genesis := LoadGenesisBlockEntity()
-	if bc.Blocks[0].Key != genesis.Key || bc.Blocks[0].Value.Hash() != genesis.Key {
+	genesis := loadGenesisBlock()
+	if bc.Blocks[0].BlockHash != genesis.BlockHash || bc.Blocks[0].Content.Hash() != genesis.BlockHash {
 		return false
 	}
 
 	for i := 1; i < len(bc.Blocks); i++ {
-		if bc.Blocks[i].Value.BlockHeader.ParentHash != bc.Blocks[i-1].Key {
+		if bc.Blocks[i].Content.ParentHash != bc.Blocks[i-1].BlockHash {
 			return false
 		}
-		if bc.Blocks[i].Value.Hash() != bc.Blocks[i].Key {
+		if bc.Blocks[i].Content.Hash() != bc.Blocks[i].BlockHash {
 			return false
 		}
 	}

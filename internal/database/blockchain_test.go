@@ -6,28 +6,28 @@ import (
 
 func TestNewBlockchain(t *testing.T) {
 	blockchain := NewBlockchain()
-	genesisEntity := LoadGenesisBlockEntity()
+	genesisEntity := loadGenesisBlock()
 
-	if blockchain.Blocks[0].Key != genesisEntity.Key {
+	if blockchain.Blocks[0].BlockHash != genesisEntity.BlockHash {
 		t.Error("New blockchain genesis hash does not equal original genesis hash")
 	}
 }
 
 func TestAddBlock(t *testing.T) {
 	blockchain := NewBlockchain()
-	genesisEntity := LoadGenesisBlockEntity()
+	genesisEntity := loadGenesisBlock()
 	const newBlockPayload = "payload1"
 
-	payload := Payload{[]string{newBlockPayload}}
+	payload := Transactions{[]string{newBlockPayload}}
 	blockchain.AddBlock(payload)
 
 	if len(blockchain.Blocks) != 2 {
 		t.Fatalf("blockchain length is incorrect. Input: %d, Expected %d", len(blockchain.Blocks), 2)
 	}
-	if blockchain.Blocks[0].Key != genesisEntity.Key {
+	if blockchain.Blocks[0].BlockHash != genesisEntity.BlockHash {
 		t.Error("blockchain genesis hash does not equal original genesis hash after adding new block")
 	}
-	if blockchain.Blocks[0].Key != blockchain.Blocks[1].Value.BlockHeader.ParentHash {
+	if blockchain.Blocks[0].BlockHash != blockchain.Blocks[1].Content.ParentHash {
 		t.Error("new block parentHash does not equal previous blocks hash")
 	}
 }
@@ -39,7 +39,7 @@ func TestIsValid(t *testing.T) {
 		t.Fatal("Created new blockchain and should be valid.")
 	}
 
-	payload := Payload{[]string{"payload"}}
+	payload := Transactions{[]string{"payload"}}
 	blockchain.AddBlock(payload)
 
 	if !blockchain.IsValid() {
@@ -47,7 +47,7 @@ func TestIsValid(t *testing.T) {
 	}
 
 	// tamper with blockchain
-	blockchain.Blocks = []BlockEntity{}
+	blockchain.Blocks = []Block{}
 	if blockchain.IsValid() {
 		t.Fatal("BlockEntities were all removed. Should be an invalid blockchain.")
 	}
@@ -55,19 +55,19 @@ func TestIsValid(t *testing.T) {
 	blockchain = NewBlockchain()
 	blockchain.AddBlock(payload)
 
-	blockchain.Blocks[0].Value.BlockHeader.Number = 1
+	blockchain.Blocks[0].Content.Number = 1
 	if blockchain.IsValid() {
 		t.Error("Geneisis block number was altered. Should be an invalid blockchain.")
 	}
 
-	blockchain.Blocks[0].Value.BlockHeader.Number = 0
-	blockchain.Blocks[1].Value.BlockHeader.Number = 5
+	blockchain.Blocks[0].Content.Number = 0
+	blockchain.Blocks[1].Content.Number = 5
 	if blockchain.IsValid() {
 		t.Error("Block entity 2's number was altered. Should be an invalid blockchain.")
 	}
 
-	blockchain.Blocks[1].Value.BlockHeader.Number = 1
-	blockchain.Blocks[1].Value.BlockHeader.ParentHash = [32]byte{}
+	blockchain.Blocks[1].Content.Number = 1
+	blockchain.Blocks[1].Content.ParentHash = [32]byte{}
 	if blockchain.IsValid() {
 		t.Error("Block entity 2's parentHash was altered. Should be an invalid blockchain.")
 	}
@@ -77,7 +77,7 @@ func TestReplace(t *testing.T) {
 	blockchain1 := NewBlockchain()
 	blockchain2 := NewBlockchain()
 
-	payload := Payload{[]string{"payload"}}
+	payload := Transactions{[]string{"payload"}}
 	blockchain2.AddBlock(payload)
 
 	if !blockchain1.Replace(&blockchain2) {

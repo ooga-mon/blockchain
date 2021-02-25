@@ -7,36 +7,28 @@ import (
 )
 
 type Block struct {
-	BlockHeader BlockHeader
-	Payload     Payload
+	BlockHash Hash
+	Content   Content
 }
 
-type BlockHeader struct {
+type Content struct {
 	ParentHash Hash
 	Timestamp  time.Time
 	Number     uint64
+	Tx         Transactions
 }
 
-type Payload struct {
+type Transactions struct {
 	Data []string
 }
 
-type BlockEntity struct {
-	Key   Hash
-	Value Block
+func NewBlock(parentHash Hash, time time.Time, number uint64, payload Transactions) Block {
+	content := Content{parentHash, time, number, payload}
+	return Block{content.Hash(), content}
 }
 
-func NewBlock(parentHash Hash, time time.Time, number uint64, payload Payload) Block {
-	header := BlockHeader{parentHash, time, number}
-	return Block{header, payload}
-}
-
-func NewBlockEntity(block Block) BlockEntity {
-	return BlockEntity{block.Hash(), block}
-}
-
-func (b Block) Hash() Hash {
-	jsonBlock, err := json.Marshal(b)
+func (c Content) Hash() Hash {
+	jsonBlock, err := json.Marshal(c)
 	if err != nil {
 		return Hash{}
 	}

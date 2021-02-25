@@ -11,7 +11,7 @@ import (
 const CONTENT_TYPE = "application/json"
 
 type StandardResponse struct {
-	Success bool   `json:"success"`
+	Success bool   `json:"Success"`
 	Error   string `json:"Error"`
 }
 
@@ -20,8 +20,8 @@ type errResp struct {
 }
 
 type Status struct {
-	Info      connectionInfo
-	KnowPeers map[string]connectionInfo `json:"connection_info"`
+	Info      connectionInfo            `json:"Info"`
+	KnowPeers map[string]connectionInfo `json:"Known_Peers"`
 }
 
 func writeRequest(url string, content interface{}) (*http.Response, error) {

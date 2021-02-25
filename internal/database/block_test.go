@@ -10,19 +10,19 @@ import (
 func TestNewBlock(t *testing.T) {
 	blockParentHash := [32]byte{}
 	time := time.Date(2021, time.February, 13, 20, 0, 0, 0, time.UTC)
-	const blockHash = "9ff955fe117ddc51a11409ba6a82b25c21f4d6c23c8a90dc98b240f5284d1d71"
+	const blockHash = "19b1cf0231b28e49ba6228e646cb9ffd30166b0816a388448ec7095264a1e235"
 	const blockPayload = "test1"
-	payload := Payload{[]string{blockPayload}}
+	payload := Transactions{[]string{blockPayload}}
 	block := NewBlock(blockParentHash, time, 0, payload)
 
-	hash := block.Hash()
+	hash := block.BlockHash
 	if hex.EncodeToString(hash[:]) != blockHash {
 		t.Errorf("block hash is improperly set. Input: %s, Expected: %s.", hex.EncodeToString(hash[:]), blockHash)
 	}
-	if block.BlockHeader.ParentHash != blockParentHash {
+	if block.Content.ParentHash != blockParentHash {
 		t.Errorf("block parentHash is improperly set. Should be empty")
 	}
-	if block.Payload.Data[0] != blockPayload {
-		t.Errorf("block payload is improperly set. Input: %s, Expected: %s.", block.Payload.Data[0], blockPayload)
+	if block.Content.Tx.Data[0] != blockPayload {
+		t.Errorf("block payload is improperly set. Input: %s, Expected: %s.", block.Content.Tx.Data[0], blockPayload)
 	}
 }
