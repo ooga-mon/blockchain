@@ -1,0 +1,72 @@
+package node
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func (n *Node) sync(ctx context.Context) error {
+	n.doSync(ctx)
+
+	ticker := time.NewTicker(60 * time.Second)
+
+	for {
+		select {
+		case <-ticker.C:
+			n.doSync(ctx)
+		case <-ctx.Done():
+			ticker.Stop()
+		}
+	}
+}
+
+func (n *Node) doSync(ctx context.Context) {
+	fmt.Println("Attempting sync process")
+	for _, peer := range n.peers {
+		fmt.Printf("Starting sync process with %s\n", peer.tcpAddress())
+		// We can be a little defensive here even though there are checks in other places.
+		// Just in case a peer add accidentally maps itself. This could cause unwanted behaviour in this function.
+		if n.info.IP == peer.IP && n.info.Port == peer.Port {
+			continue
+		}
+		if peer.IP == "" || peer.Port == 0 {
+			continue
+		}
+
+		status, err := getPeerStatus(peer)
+		if err != nil {
+			n.removePeer(peer)
+		}
+
+		n.addUnknownPeers(status)
+	}
+}
+
+func getPeerStatus(peer connectionInfo) (Status, error) {
+	url := fmt.Sprintf("http://%s/node/status", peer.tcpAddress())
+	res, err := http.Get(url)
+	if err != nil {
+		return Status{}, err
+	}
+
+	peerStatus := Status{}
+	err = readResponse(res, &peerStatus)
+	if err != nil {
+		return Status{}, err
+	}
+
+	return peerStatus, nil
+}
+
+func (n *Node) addUnknownPeers(peerStatus Status) error {
+	for _, unknownPeer := range peerStatus.KnowPeers {
+		if !n.containsPeer(unknownPeer) {
+			fmt.Printf("Found new peer %s\n", unknownPeer.tcpAddress())
+			n.addPeer(unknownPeer)
+		}
+	}
+
+	return nil
+}

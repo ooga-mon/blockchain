@@ -2,7 +2,6 @@ package node
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -25,7 +24,7 @@ func (n *Node) handlerGetBlockChain(w http.ResponseWriter, r *http.Request) {
 
 func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != CONTENT_TYPE {
-		writeErrorResponse(w, errors.New("Content Type is not application/json"), http.StatusUnsupportedMediaType)
+		writeErrorResponse(w, fmt.Errorf("Content Type is not application/json"), http.StatusUnsupportedMediaType)
 		return
 	}
 
@@ -68,4 +67,15 @@ func (n *Node) handlerAddPeer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Println("New peer added.")
+}
+
+func (n *Node) handlerGetStatus(w http.ResponseWriter, r *http.Request) {
+	nodeStatus := Status{n.peers}
+
+	err := writeResponse(w, nodeStatus, http.StatusOK)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	fmt.Println("Retrieved node status.")
 }

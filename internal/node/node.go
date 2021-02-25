@@ -9,9 +9,9 @@ import (
 )
 
 const DefaultIP = "127.0.0.1"
-const DefaultPort = 8081
+const DefaultPort = 8080
 const DefaultPeerIP = "127.0.0.1"
-const DefaultPeerPort = 8081
+const DefaultPeerPort = 8080
 
 type connectionInfo struct {
 	IP   string
@@ -38,7 +38,8 @@ type Node struct {
 
 func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort uint64) *Node {
 	peers := map[string]connectionInfo{}
-	if bootstrapPeerIP != ip && bootstrapPeerPort != port {
+	if bootstrapPeerIP != ip || bootstrapPeerPort != port {
+		fmt.Printf("bootstrap parms IP:%s, Port:%d\n", bootstrapPeerIP, bootstrapPeerPort)
 		bootstrapCon := newConnectionInfo(bootstrapPeerIP, bootstrapPeerPort, false)
 		peers[bootstrapCon.tcpAddress()] = bootstrapCon
 	}
@@ -52,7 +53,23 @@ func (n *Node) addPeer(con connectionInfo) {
 	n.peers[con.tcpAddress()] = con
 }
 
+func (n *Node) containsPeer(peer connectionInfo) bool {
+	if n.info.IP == peer.IP && n.info.Port == peer.Port {
+		return true
+	}
+
+	_, found := n.peers[peer.tcpAddress()]
+
+	return found
+}
+
+func (n *Node) removePeer(peer connectionInfo) {
+	delete(n.peers, peer.tcpAddress())
+}
+
 func (n *Node) Start(ctx context.Context) error {
+	go n.sync(ctx)
+
 	return n.serverHttp(ctx)
 }
 
@@ -62,6 +79,7 @@ func (n *Node) serverHttp(ctx context.Context) error {
 	handler.HandleFunc("/blocks", n.handlerGetBlockChain)
 	handler.HandleFunc("/mine", n.handlerMineBlock)
 	handler.HandleFunc("/node/peer", n.handlerAddPeer)
+	handler.HandleFunc("/node/status", n.handlerGetStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
 	// This is to ensure the server is closed if/when the context signals done
