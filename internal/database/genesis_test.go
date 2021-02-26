@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetGenesisBlockchain(t *testing.T) {
-	const genesisHash = "457ba46d82bdfe88a7f7b0c52001122674cc3dde79ab7a94f2b8b40bf80a3b2c"
+	const genesisHash = "f540a12f198dce0e5407d1bc1e4d2e27d64964af152e58881b60031a0bc3aba3"
 	genesisParentHash := [32]byte{}
 	genesis := loadGenesisBlock()
 	if genesis.Content.ParentHash != genesisParentHash {

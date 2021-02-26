@@ -13,13 +13,13 @@ func TestNewBlockchain(t *testing.T) {
 	}
 }
 
-func TestAddBlock(t *testing.T) {
+func TestMineBlock(t *testing.T) {
 	blockchain := NewBlockchain()
 	genesisEntity := loadGenesisBlock()
 	const newBlockPayload = "payload1"
 
 	payload := Transactions{[]string{newBlockPayload}}
-	blockchain.AddBlock(payload)
+	blockchain.MineBlock(payload)
 
 	if len(blockchain.Blocks) != 2 {
 		t.Fatalf("blockchain length is incorrect. Input: %d, Expected %d", len(blockchain.Blocks), 2)
@@ -29,6 +29,12 @@ func TestAddBlock(t *testing.T) {
 	}
 	if blockchain.Blocks[0].BlockHash != blockchain.Blocks[1].Content.ParentHash {
 		t.Error("new block parentHash does not equal previous blocks hash")
+	}
+	hashHex := blockchain.Blocks[1].BlockHash.Hex()
+	for i := 0; i < DIFFICULTY; i++ {
+		if hashHex[i] != '0' {
+			t.Errorf("new block hash does not meet difficulty requirements. Input: %s", blockchain.Blocks[1].BlockHash.Hex())
+		}
 	}
 }
 
@@ -40,7 +46,7 @@ func TestIsValid(t *testing.T) {
 	}
 
 	payload := Transactions{[]string{"payload"}}
-	blockchain.AddBlock(payload)
+	blockchain.MineBlock(payload)
 
 	if !blockchain.IsValid() {
 		t.Fatal("Added block to blockchain and should be valid.")
@@ -53,7 +59,7 @@ func TestIsValid(t *testing.T) {
 	}
 
 	blockchain = NewBlockchain()
-	blockchain.AddBlock(payload)
+	blockchain.MineBlock(payload)
 
 	blockchain.Blocks[0].Content.Number = 1
 	if blockchain.IsValid() {
@@ -78,7 +84,7 @@ func TestReplace(t *testing.T) {
 	blockchain2 := NewBlockchain()
 
 	payload := Transactions{[]string{"payload"}}
-	blockchain2.AddBlock(payload)
+	blockchain2.MineBlock(payload)
 
 	if !blockchain1.Replace(&blockchain2) {
 		t.Error("Blockchain1 should have been replaced with blockchain2.")
@@ -87,7 +93,7 @@ func TestReplace(t *testing.T) {
 		t.Errorf("Blockchain1 data should have been replaced with blockchain2 data. Input: %d, Expected: %d", len(blockchain1.Blocks), len(blockchain2.Blocks))
 	}
 
-	blockchain1.AddBlock(payload)
+	blockchain1.MineBlock(payload)
 	if blockchain1.Replace(&blockchain2) {
 		t.Error("Blockchain1 should not have been replaced with blockchain2.")
 	}

@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const DIFFICULTY = 5
+
 type Blockchain struct {
 	Blocks []Block `json:"blocks"`
 }
@@ -12,11 +14,27 @@ func NewBlockchain() Blockchain {
 	return Blockchain{[]Block{loadGenesisBlock()}}
 }
 
-func (bc *Blockchain) AddBlock(Tx Transactions) Block {
+func (bc *Blockchain) MineBlock(Tx Transactions) Block {
 	lastBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := NewBlock(lastBlock.BlockHash, time.Now(), lastBlock.Content.Number+1, Tx)
+	isValidHash := false
+	var newBlock Block
+	for !isValidHash {
+		newBlock = NewBlock(lastBlock.BlockHash, time.Now(), lastBlock.Content.Number+1, 0, Tx)
+		isValidHash = isSuccessfulMinedHash(newBlock.BlockHash)
+	}
 	bc.Blocks = append(bc.Blocks, newBlock)
 	return newBlock
+}
+
+func isSuccessfulMinedHash(hash Hash) bool {
+	hashHex := hash.Hex()
+	for i := 0; i < DIFFICULTY; i++ {
+		if hashHex[i] != '0' {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (bc *Blockchain) IsValid() bool {
