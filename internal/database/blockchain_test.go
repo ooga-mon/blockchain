@@ -110,8 +110,8 @@ func TestReplace(t *testing.T) {
 }
 
 func getTestPayload(data string) []Transaction {
-	from := common.Address
-	to := common.Address
+	from := common.Address{}
+	to := common.Address{}
 
 	tx := NewTransaction(from, to, data)
 	return []Transaction{tx}
