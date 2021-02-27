@@ -113,6 +113,6 @@ func getTestPayload(data string) []Transaction {
 	from := common.Address{}
 	to := common.Address{}
 
-	tx := NewTransaction(from, to, data)
+	tx := NewTransaction(from, to, data, 1)
 	return []Transaction{tx}
 }

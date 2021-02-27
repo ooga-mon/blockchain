@@ -18,7 +18,7 @@ func TestNewBlock(t *testing.T) {
 	from := common.Address{}
 	to := common.Address{}
 
-	tx := NewTransaction(from, to, blockPayload)
+	tx := NewTransaction(from, to, blockPayload, 1)
 	payload := []Transaction{tx}
 	block := NewBlock(blockParentHash, time, number, nonce, payload)
 
