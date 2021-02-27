@@ -5,6 +5,8 @@ import (
 
 	"encoding/hex"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestNewBlock(t *testing.T) {
@@ -14,7 +16,11 @@ func TestNewBlock(t *testing.T) {
 	const blockPayload = "test1"
 	const nonce = 0
 	const number = 0
-	payload := Transactions{[]string{blockPayload}}
+	from := common.Address
+	to := common.Address
+
+	tx := NewTransaction(from, to, blockPayload)
+	payload := []Transaction{tx}
 	block := NewBlock(blockParentHash, time, number, nonce, payload)
 
 	hash := block.BlockHash
@@ -32,5 +38,20 @@ func TestNewBlock(t *testing.T) {
 	}
 	if block.Content.Nonce != nonce {
 		t.Errorf("block nonce is improperly set. Input: %d, Expected: %d.", block.Content.Nonce, nonce)
+	}
+}
+func TestGetGenesisBlockchain(t *testing.T) {
+	const genesisHash = "f540a12f198dce0e5407d1bc1e4d2e27d64964af152e58881b60031a0bc3aba3"
+	genesisParentHash := [32]byte{}
+	genesis := loadGenesisBlock()
+	if genesis.Content.ParentHash != genesisParentHash {
+		t.Errorf("Genesis parentHash is improperly set. Should be empty.")
+	}
+	hash := genesis.BlockHash
+	if hex.EncodeToString(hash[:]) != genesisHash {
+		t.Errorf("genesis hash is improperly set. Input: %s, Expected: %s.", hex.EncodeToString(hash[:]), genesisHash)
+	}
+	if len(genesis.Content.Tx) > 0 {
+		t.Errorf("genesis payload should be empty")
 	}
 }

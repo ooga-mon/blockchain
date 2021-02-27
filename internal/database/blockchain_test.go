@@ -3,6 +3,8 @@ package database
 import (
 	"testing"
 	"time"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func TestNewBlockchain(t *testing.T) {
@@ -19,7 +21,7 @@ func TestMineBlock(t *testing.T) {
 	genesisEntity := loadGenesisBlock()
 
 	const newBlockPayload = "payload1"
-	payload := Transactions{[]string{newBlockPayload}}
+	payload := getTestPayload(newBlockPayload)
 	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
 
 	blockchain.AddBlock(newBlock)
@@ -43,7 +45,8 @@ func TestIsValid(t *testing.T) {
 		t.Fatal("Created new blockchain and should be valid.")
 	}
 
-	payload := Transactions{[]string{"payload"}}
+	const newBlockPayload = "payload1"
+	payload := getTestPayload(newBlockPayload)
 	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
 
 	blockchain.AddBlock(newBlock)
@@ -84,7 +87,8 @@ func TestReplace(t *testing.T) {
 	blockchain2 := NewBlockchain()
 	genesisEntity := loadGenesisBlock()
 
-	payload := Transactions{[]string{"payload"}}
+	const newBlockPayload = "payload1"
+	payload := getTestPayload(newBlockPayload)
 	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
 	blockchain2.AddBlock(newBlock)
 
@@ -103,4 +107,12 @@ func TestReplace(t *testing.T) {
 		t.Errorf("Blockchain1 data should not have been replaced with blockchain2 data. Input: %d, Expected: %d", len(blockchain1.Blocks), len(blockchain2.Blocks))
 	}
 
+}
+
+func getTestPayload(data string) []Transaction {
+	from := common.Address
+	to := common.Address
+
+	tx := NewTransaction(from, to, data)
+	return []Transaction{tx}
 }
