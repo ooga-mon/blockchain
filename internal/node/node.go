@@ -53,7 +53,7 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 	return node
 }
 
-func (n *Node) Mine(tx database.Transactions) database.Block {
+func (n *Node) Mine(tx []database.Transaction) database.Block {
 	prevBlock := n.db.GetLastBlock()
 	pendingBlock := newPendingBlock(prevBlock.BlockHash, prevBlock.Content.Number+1, tx)
 	newBlock := n.mineBlock(pendingBlock)

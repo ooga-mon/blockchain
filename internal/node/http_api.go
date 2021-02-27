@@ -27,7 +27,7 @@ func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload database.Transactions
+	var payload []database.Transaction
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
