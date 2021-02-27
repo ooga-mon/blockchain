@@ -20,7 +20,7 @@ func newState() state {
 	return state{STARTING_DIFFICULTY, time.Now()}
 }
 
-func (s *state) setDifficulty(time time.Time) {
+func (s *state) adjustDifficulty(time time.Time) {
 	if time.Sub(s.lastMineTimestamp) < MINING_RATE {
 		if s.curDifficulty != MAX_DIFFICULTY {
 			s.curDifficulty++
@@ -48,7 +48,7 @@ func (n *Node) mineBlock(block pendingBlock) database.Block {
 	timestamp := time.Now()
 	var nonce uint64 = 0
 	var newBlock database.Block
-	n.state.setDifficulty(timestamp)
+	n.state.adjustDifficulty(timestamp)
 	for !isSuccessfulMinedHash(newBlock.BlockHash, n.state.curDifficulty) {
 		nonce++
 		newBlock = database.NewBlock(block.parentHash, timestamp, block.number, nonce, block.tx)
