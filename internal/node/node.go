@@ -30,8 +30,9 @@ func (con *connectionInfo) tcpAddress() string {
 
 type Node struct {
 	// for now we will keep the blockchain in memory and persist it to a DB/persistent storage at a later time
-	db   database.Blockchain
-	info connectionInfo
+	db    database.Blockchain
+	info  connectionInfo
+	state state
 
 	peers map[string]connectionInfo
 }
@@ -44,9 +45,22 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 		peers[bootstrapCon.tcpAddress()] = bootstrapCon
 	}
 
-	node := &Node{database.NewBlockchain(), newConnectionInfo(ip, port, true), peers}
+	state := newState()
+	conInfo := newConnectionInfo(ip, port, true)
+
+	node := &Node{database.NewBlockchain(), conInfo, state, peers}
 
 	return node
+}
+
+func (n *Node) Mine(tx database.Transactions) database.Block {
+	prevBlock := n.db.GetLastBlock()
+	pendingBlock := newPendingBlock(prevBlock.BlockHash, prevBlock.Content.Number+1, tx)
+	newBlock := n.mineBlock(pendingBlock)
+	n.state.setLastMineTime()
+	fmt.Printf("Difficulty set at %d\n", n.state.curDifficulty)
+	n.db.AddBlock(newBlock)
+	return newBlock
 }
 
 func (n *Node) addPeer(con connectionInfo) {

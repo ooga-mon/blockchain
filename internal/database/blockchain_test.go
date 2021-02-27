@@ -2,6 +2,7 @@ package database
 
 import (
 	"testing"
+	"time"
 )
 
 func TestNewBlockchain(t *testing.T) {
@@ -16,10 +17,12 @@ func TestNewBlockchain(t *testing.T) {
 func TestMineBlock(t *testing.T) {
 	blockchain := NewBlockchain()
 	genesisEntity := loadGenesisBlock()
-	const newBlockPayload = "payload1"
 
+	const newBlockPayload = "payload1"
 	payload := Transactions{[]string{newBlockPayload}}
-	blockchain.MineBlock(payload)
+	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
+
+	blockchain.AddBlock(newBlock)
 
 	if len(blockchain.Blocks) != 2 {
 		t.Fatalf("blockchain length is incorrect. Input: %d, Expected %d", len(blockchain.Blocks), 2)
@@ -30,23 +33,20 @@ func TestMineBlock(t *testing.T) {
 	if blockchain.Blocks[0].BlockHash != blockchain.Blocks[1].Content.ParentHash {
 		t.Error("new block parentHash does not equal previous blocks hash")
 	}
-	hashHex := blockchain.Blocks[1].BlockHash.Hex()
-	for i := 0; i < DIFFICULTY; i++ {
-		if hashHex[i] != '0' {
-			t.Errorf("new block hash does not meet difficulty requirements. Input: %s", blockchain.Blocks[1].BlockHash.Hex())
-		}
-	}
 }
 
 func TestIsValid(t *testing.T) {
 	blockchain := NewBlockchain()
+	genesisEntity := loadGenesisBlock()
 
 	if !blockchain.IsValid() {
 		t.Fatal("Created new blockchain and should be valid.")
 	}
 
 	payload := Transactions{[]string{"payload"}}
-	blockchain.MineBlock(payload)
+	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
+
+	blockchain.AddBlock(newBlock)
 
 	if !blockchain.IsValid() {
 		t.Fatal("Added block to blockchain and should be valid.")
@@ -59,7 +59,7 @@ func TestIsValid(t *testing.T) {
 	}
 
 	blockchain = NewBlockchain()
-	blockchain.MineBlock(payload)
+	blockchain.AddBlock(newBlock)
 
 	blockchain.Blocks[0].Content.Number = 1
 	if blockchain.IsValid() {
@@ -82,9 +82,11 @@ func TestIsValid(t *testing.T) {
 func TestReplace(t *testing.T) {
 	blockchain1 := NewBlockchain()
 	blockchain2 := NewBlockchain()
+	genesisEntity := loadGenesisBlock()
 
 	payload := Transactions{[]string{"payload"}}
-	blockchain2.MineBlock(payload)
+	newBlock := NewBlock(genesisEntity.BlockHash, time.Now(), 1, 0, payload)
+	blockchain2.AddBlock(newBlock)
 
 	if !blockchain1.Replace(&blockchain2) {
 		t.Error("Blockchain1 should have been replaced with blockchain2.")
@@ -93,7 +95,7 @@ func TestReplace(t *testing.T) {
 		t.Errorf("Blockchain1 data should have been replaced with blockchain2 data. Input: %d, Expected: %d", len(blockchain1.Blocks), len(blockchain2.Blocks))
 	}
 
-	blockchain1.MineBlock(payload)
+	blockchain1.AddBlock(newBlock)
 	if blockchain1.Replace(&blockchain2) {
 		t.Error("Blockchain1 should not have been replaced with blockchain2.")
 	}

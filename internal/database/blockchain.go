@@ -1,11 +1,5 @@
 package database
 
-import (
-	"time"
-)
-
-const DIFFICULTY = 4
-
 type Blockchain struct {
 	Blocks []Block `json:"blocks"`
 }
@@ -18,30 +12,8 @@ func (bc *Blockchain) GetLastBlock() Block {
 	return bc.Blocks[len(bc.Blocks)-1]
 }
 
-func (bc *Blockchain) MineBlock(Tx Transactions) Block {
-	lastBlock := bc.GetLastBlock()
-	timestamp := time.Now()
-	var nonce uint64 = 0
-	isValidHash := false
-	var newBlock Block
-	for !isValidHash {
-		nonce++
-		newBlock = NewBlock(lastBlock.BlockHash, timestamp, lastBlock.Content.Number+1, nonce, Tx)
-		isValidHash = isSuccessfulMinedHash(newBlock.BlockHash)
-	}
+func (bc *Blockchain) AddBlock(newBlock Block) {
 	bc.Blocks = append(bc.Blocks, newBlock)
-	return newBlock
-}
-
-func isSuccessfulMinedHash(hash Hash) bool {
-	hashHex := hash.Hex()
-	for i := 0; i < DIFFICULTY; i++ {
-		if hashHex[i] != '0' {
-			return false
-		}
-	}
-
-	return true
 }
 
 func (bc *Blockchain) IsValid() bool {
