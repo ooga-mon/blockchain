@@ -37,7 +37,7 @@ func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	block := n.db.AddBlock(payload)
+	block := n.db.MineBlock(payload)
 	err = writeResponse(w, block, http.StatusOK)
 	if err != nil {
 		fmt.Print(err)

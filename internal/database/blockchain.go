@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-const DIFFICULTY = 5
+const DIFFICULTY = 4
 
 type Blockchain struct {
 	Blocks []Block `json:"blocks"`
@@ -14,12 +14,19 @@ func NewBlockchain() Blockchain {
 	return Blockchain{[]Block{loadGenesisBlock()}}
 }
 
+func (bc *Blockchain) GetLastBlock() Block {
+	return bc.Blocks[len(bc.Blocks)-1]
+}
+
 func (bc *Blockchain) MineBlock(Tx Transactions) Block {
-	lastBlock := bc.Blocks[len(bc.Blocks)-1]
+	lastBlock := bc.GetLastBlock()
+	timestamp := time.Now()
+	var nonce uint64 = 0
 	isValidHash := false
 	var newBlock Block
 	for !isValidHash {
-		newBlock = NewBlock(lastBlock.BlockHash, time.Now(), lastBlock.Content.Number+1, 0, Tx)
+		nonce++
+		newBlock = NewBlock(lastBlock.BlockHash, timestamp, lastBlock.Content.Number+1, nonce, Tx)
 		isValidHash = isSuccessfulMinedHash(newBlock.BlockHash)
 	}
 	bc.Blocks = append(bc.Blocks, newBlock)
