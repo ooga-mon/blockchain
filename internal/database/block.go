@@ -12,10 +12,10 @@ type Block struct {
 }
 
 type Content struct {
-	ParentHash Hash      `json:"Parent_Hash"`
-	Timestamp  time.Time `json:"Timestamp"`
-	Number     uint64    `json:"Number"`
-	Nonce      uint64
+	ParentHash Hash                `json:"Parent_Hash"`
+	Timestamp  time.Time           `json:"Timestamp"`
+	Number     uint64              `json:"Number"`
+	Nonce      uint64              `json:"Nonce"`
 	Tx         []SignedTransaction `json:"Transactions"`
 }
 

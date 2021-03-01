@@ -29,12 +29,13 @@ func (con *connectionInfo) tcpAddress() string {
 }
 
 type Node struct {
-	// for now we will keep the blockchain in memory and persist it to a DB/persistent storage at a later time
+	// For now we will keep all the data in memory. We can do persistent storage as a later feature.
 	db    database.Blockchain
 	info  connectionInfo
 	state state
 
-	peers map[string]connectionInfo
+	txPool map[string]database.SignedTransaction
+	peers  map[string]connectionInfo
 }
 
 func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort uint64) *Node {
@@ -47,13 +48,14 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 
 	state := newState()
 	conInfo := newConnectionInfo(ip, port, true)
+	txPool := map[string]database.SignedTransaction{}
 
-	node := &Node{database.NewBlockchain(), conInfo, state, peers}
+	node := &Node{database.NewBlockchain(), conInfo, state, txPool, peers}
 
 	return node
 }
 
-func (n *Node) Mine(tx []database.SignedTransaction) database.Block {
+func (n *Node) mine(tx []database.SignedTransaction) database.Block {
 	prevBlock := n.db.GetLastBlock()
 	pendingBlock := newPendingBlock(prevBlock.BlockHash, prevBlock.Content.Number+1, tx)
 	newBlock := n.mineBlock(pendingBlock)
@@ -61,6 +63,25 @@ func (n *Node) Mine(tx []database.SignedTransaction) database.Block {
 	fmt.Printf("Difficulty set at %d\n", n.state.curDifficulty)
 	n.db.AddBlock(newBlock)
 	return newBlock
+}
+
+func (n *Node) getNextTransactionToMine() {
+
+}
+
+func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
+	hashSignedTx, err := tx.Hash()
+	if err != nil {
+		return err
+	}
+
+	hexSignedTx := hashSignedTx.Hex()
+
+	if _, found := n.txPool[hexSignedTx]; !found {
+		n.txPool[hexSignedTx] = tx
+	}
+
+	return nil
 }
 
 func (n *Node) addPeer(con connectionInfo) {
@@ -93,8 +114,8 @@ func (n *Node) Start(ctx context.Context) error {
 func (n *Node) serverHttp(ctx context.Context) error {
 	handler := http.NewServeMux()
 
-	handler.HandleFunc("/blocks", n.handlerGetBlockChain)
-	handler.HandleFunc("/mine", n.handlerMineBlock)
+	handler.HandleFunc("/node/blocks", n.handlerGetBlockChain)
+	handler.HandleFunc("/node/Transaction", n.handlerPostTransaction)
 	handler.HandleFunc("/node/status", n.handlerPostStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}

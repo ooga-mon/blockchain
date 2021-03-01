@@ -21,13 +21,13 @@ func (n *Node) handlerGetBlockChain(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Retrieved blocks.")
 }
 
-func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
+func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != CONTENT_TYPE {
 		writeErrorResponse(w, fmt.Errorf("Content Type is not application/json"), http.StatusUnsupportedMediaType)
 		return
 	}
 
-	var payload []database.SignedTransaction
+	var payload database.SignedTransaction
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -37,13 +37,7 @@ func (n *Node) handlerMineBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	block := n.Mine(payload)
-	err = writeResponse(w, block, http.StatusOK)
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-	fmt.Println("New block added.")
+	n.addPendingTransaction(payload)
 
 	n.postSync()
 }
