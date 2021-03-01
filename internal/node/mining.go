@@ -11,29 +11,6 @@ const MINING_RATE = 5 * time.Second
 const MAX_DIFFICULTY = 6
 const MIN_DIFFICULTY = 2
 
-type state struct {
-	curDifficulty     int
-	lastMineTimestamp time.Time
-}
-
-func newState() state {
-	return state{STARTING_DIFFICULTY, time.Now()}
-}
-
-func (s *state) adjustDifficulty(time time.Time) {
-	if time.Sub(s.lastMineTimestamp) < MINING_RATE {
-		if s.curDifficulty != MAX_DIFFICULTY {
-			s.curDifficulty++
-		}
-	} else if s.curDifficulty > MIN_DIFFICULTY {
-		s.curDifficulty--
-	}
-}
-
-func (s *state) setLastMineTime() {
-	s.lastMineTimestamp = time.Now()
-}
-
 type pendingBlock struct {
 	parentHash database.Hash
 	number     uint64
