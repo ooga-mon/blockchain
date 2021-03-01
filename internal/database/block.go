@@ -16,10 +16,10 @@ type Content struct {
 	Timestamp  time.Time `json:"Timestamp"`
 	Number     uint64    `json:"Number"`
 	Nonce      uint64
-	Tx         []Transaction `json:"Transactions"`
+	Tx         []SignedTransaction `json:"Transactions"`
 }
 
-func NewBlock(parentHash Hash, time time.Time, number uint64, nonce uint64, payload []Transaction) Block {
+func NewBlock(parentHash Hash, time time.Time, number uint64, nonce uint64, payload []SignedTransaction) Block {
 	content := Content{parentHash, time, number, nonce, payload}
 	return Block{content.Hash(), content}
 }
@@ -35,6 +35,6 @@ func (c Content) Hash() Hash {
 
 func loadGenesisBlock() Block {
 	time := time.Date(2021, time.February, 13, 20, 0, 0, 0, time.UTC)
-	payload := []Transaction{}
+	payload := []SignedTransaction{}
 	return NewBlock([32]byte{}, time, 0, 0, payload)
 }

@@ -37,10 +37,10 @@ func (s *state) setLastMineTime() {
 type pendingBlock struct {
 	parentHash database.Hash
 	number     uint64
-	tx         []database.Transaction
+	tx         []database.SignedTransaction
 }
 
-func newPendingBlock(parentHash database.Hash, number uint64, tx []database.Transaction) pendingBlock {
+func newPendingBlock(parentHash database.Hash, number uint64, tx []database.SignedTransaction) pendingBlock {
 	return pendingBlock{parentHash, number, tx}
 }
 
