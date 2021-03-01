@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/ooga-mon/blockchain/internal/database"
 )
@@ -12,6 +13,7 @@ const DefaultIP = "127.0.0.1"
 const DefaultPort = 8080
 const DefaultPeerIP = "127.0.0.1"
 const DefaultPeerPort = 8080
+const MiningInterval = time.Second * 10
 
 type connectionInfo struct {
 	IP   string `json:"IP"`
@@ -55,18 +57,51 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 	return node
 }
 
-func (n *Node) mine(tx []database.SignedTransaction) database.Block {
-	prevBlock := n.db.GetLastBlock()
-	pendingBlock := newPendingBlock(prevBlock.BlockHash, prevBlock.Content.Number+1, tx)
-	newBlock := n.mineBlock(pendingBlock)
-	n.state.setLastMineTime()
-	fmt.Printf("Difficulty set at %d\n", n.state.curDifficulty)
-	n.db.AddBlock(newBlock)
-	return newBlock
+func (n *Node) Start(ctx context.Context) error {
+	go n.mine(ctx)
+	go n.postSync()
+
+	return n.serverHttp(ctx)
 }
 
-func (n *Node) getNextTransactionToMine() {
+func (n *Node) mine(ctx context.Context) {
+	ticker := time.NewTicker(MiningInterval)
 
+	for {
+		select {
+		case <-ticker.C:
+			if !n.state.isMining {
+				n.state.setMiningFlag(true)
+				go n.mineTxPool()
+			}
+		case <-ctx.Done():
+			ticker.Stop()
+			return
+		}
+	}
+}
+
+func (n *Node) mineTxPool() {
+	signedTxs := n.getNextTransactionToMine()
+	if len(signedTxs) > 0 {
+		prevBlock := n.db.GetLastBlock()
+		pendingBlock := newPendingBlock(prevBlock.BlockHash, prevBlock.Content.Number+1, signedTxs)
+		newBlock := n.mineBlock(pendingBlock)
+		n.state.setLastMineTime()
+		fmt.Printf("Mined new block %s at difficulty %d\n", newBlock.BlockHash.Hex(), n.state.curDifficulty)
+		n.db.AddBlock(newBlock)
+	}
+	n.state.setMiningFlag(false)
+}
+
+func (n *Node) getNextTransactionToMine() []database.SignedTransaction {
+	signedTxs := make([]database.SignedTransaction, len(n.txPool))
+
+	for _, tx := range n.txPool {
+		signedTxs = append(signedTxs, tx)
+	}
+
+	return signedTxs
 }
 
 func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
@@ -103,12 +138,6 @@ func (n *Node) containsPeer(peer connectionInfo) bool {
 
 func (n *Node) removePeer(peer connectionInfo) {
 	delete(n.peers, peer.tcpAddress())
-}
-
-func (n *Node) Start(ctx context.Context) error {
-	go n.postSync()
-
-	return n.serverHttp(ctx)
 }
 
 func (n *Node) serverHttp(ctx context.Context) error {
