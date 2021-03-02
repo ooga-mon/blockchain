@@ -37,15 +37,13 @@ func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isAuthentic, err := payload.IsAuthentic()
+	err = n.addPendingTransaction(payload)
 	if err != nil {
 		writeErrorResponse(w, fmt.Errorf("Could not authenticate transaction"), http.StatusBadRequest)
 		return
 	}
-	if isAuthentic {
-		n.addPendingTransaction(payload)
-		n.postSync()
-	}
+
+	n.postSync()
 
 }
 

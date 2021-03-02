@@ -105,15 +105,20 @@ func (n *Node) getNextTransactionToMine() []database.SignedTransaction {
 }
 
 func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
-	hashSignedTx, err := tx.Hash()
+	if ok, err := tx.IsAuthentic(); !ok {
+		fmt.Println("Non-authentic transaction came in. Not adding to pool.")
+		return err
+	}
+
+	signedTxHash, err := tx.Hash()
 	if err != nil {
 		return err
 	}
 
-	hexSignedTx := hashSignedTx.Hex()
+	signedTxHex := signedTxHash.Hex()
 
-	if _, found := n.txPool[hexSignedTx]; !found {
-		n.txPool[hexSignedTx] = tx
+	if _, found := n.txPool[signedTxHex]; !found {
+		n.txPool[signedTxHex] = tx
 	}
 
 	return nil
@@ -148,11 +153,10 @@ func (n *Node) serverHttp(ctx context.Context) error {
 	handler.HandleFunc("/node/status", n.handlerPostStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
-	// This is to ensure the server is closed if/when the context signals done
+	// This is to ensure the server is closed if/when the context signals done. Most widely used in testing for early termination.
 	go func() {
 		<-ctx.Done()
 		server.Close()
-		fmt.Println("Server was closed.")
 	}()
 
 	fmt.Printf("Listening for requests on port: %d.\n", n.info.Port)
