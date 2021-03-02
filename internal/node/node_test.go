@@ -12,12 +12,14 @@ import (
 func TestNodeStart(t *testing.T) {
 	node := NewNode(DefaultIP, DefaultPort, DefaultPeerIP, DefaultPeerPort)
 
-	ctx, _ := context.WithTimeout(context.Background(), 4*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 
 	err := node.Start(ctx)
 	if err != http.ErrServerClosed {
 		t.Fatal(err)
 	}
+
+	cancel()
 }
 
 func TestMine(t *testing.T) {
