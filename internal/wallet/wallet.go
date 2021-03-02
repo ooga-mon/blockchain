@@ -7,30 +7,39 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ooga-mon/blockchain/internal/database"
 )
 
 type Wallet struct {
-	balance    int64
-	privateKey *ecdsa.PrivateKey
+	Balance       int64
+	PublicAddress common.Address
+	PrivateKey    *ecdsa.PrivateKey
 }
 
 func NewWallet() Wallet {
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	privateKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return Wallet{0, privateKey}
+
+	publicKey := privateKey.PublicKey
+	publicKeyBytes := elliptic.Marshal(crypto.S256(), publicKey.X, publicKey.Y)
+	publicKeyHash := crypto.Keccak256(publicKeyBytes[1:])
+
+	address := common.BytesToAddress(publicKeyHash[12:])
+
+	return Wallet{0, address, privateKey}
 }
 
-func (w *Wallet) SignTransaction(tx database.Transaction, privateKey *ecdsa.PrivateKey) (database.SignedTransaction, error) {
+func (w *Wallet) SignTransaction(tx database.Transaction) (database.SignedTransaction, error) {
 	encodedTransaction, err := tx.Encode()
 	if err != nil {
 		return database.SignedTransaction{}, err
 	}
 
-	sig, err := sign(encodedTransaction, privateKey)
+	sig, err := signMessage(encodedTransaction, w.PrivateKey)
 	if err != nil {
 		return database.SignedTransaction{}, err
 	}
@@ -38,7 +47,7 @@ func (w *Wallet) SignTransaction(tx database.Transaction, privateKey *ecdsa.Priv
 	return database.NewSignedTransaction(tx, sig), nil
 }
 
-func sign(msg []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
+func signMessage(msg []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	msgHash := sha256.Sum256(msg)
 
 	return crypto.Sign(msgHash[:], privateKey)
