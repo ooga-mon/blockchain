@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ooga-mon/blockchain/internal/database"
 	"github.com/ooga-mon/blockchain/internal/wallet"
 )
 
@@ -24,8 +23,7 @@ func TestNodeStart(t *testing.T) {
 func TestMine(t *testing.T) {
 	testUser1 := wallet.NewWallet()
 	testUser2 := wallet.NewWallet()
-	tx := database.NewTransaction(testUser1.PublicAddress, testUser2.PublicAddress, "testPayload", 1)
-	signedTx, err := testUser1.SignTransaction(tx)
+	signedTx, err := testUser1.CreateTransaction(testUser2.PublicAddress, "simple payload")
 	if err != nil {
 		t.Fatal(err)
 	}

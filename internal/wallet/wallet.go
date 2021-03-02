@@ -33,7 +33,12 @@ func NewWallet() Wallet {
 	return Wallet{0, address, privateKey}
 }
 
-func (w *Wallet) SignTransaction(tx database.Transaction) (database.SignedTransaction, error) {
+func (w *Wallet) CreateTransaction(to common.Address, data string) (database.SignedTransaction, error) {
+	tx := database.NewTransaction(w.PublicAddress, to, data, 1)
+	return w.signTransaction(tx)
+}
+
+func (w *Wallet) signTransaction(tx database.Transaction) (database.SignedTransaction, error) {
 	encodedTransaction, err := tx.Encode()
 	if err != nil {
 		return database.SignedTransaction{}, err
