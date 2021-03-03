@@ -3,7 +3,7 @@ package node
 import (
 	"time"
 
-	"github.com/ooga-mon/blockchain/internal/database"
+	"github.com/ooga-mon/blockchain/database"
 )
 
 const STARTING_DIFFICULTY = 4
