@@ -27,7 +27,7 @@ type Status struct {
 	Blockchain database.Blockchain       `json:"Blockchain"` //TODO switch this to be the last block info instead of the whole chain each time
 }
 
-func writeRequest(url string, content interface{}) (*http.Response, error) {
+func WriteRequest(url string, content interface{}) (*http.Response, error) {
 	jsonContent, err := json.Marshal(content)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func writeRequest(url string, content interface{}) (*http.Response, error) {
 	return http.Post(url, "application/json", bytes.NewBuffer(jsonContent))
 }
 
-func readRequestBody(r *http.Request, reqBody interface{}) error {
+func ReadRequestBody(r *http.Request, reqBody interface{}) error {
 	reqBodyJson, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("unable to read request body. %s", err.Error())
@@ -50,10 +50,10 @@ func readRequestBody(r *http.Request, reqBody interface{}) error {
 	return nil
 }
 
-func writeResponse(w http.ResponseWriter, content interface{}, httpStatusCode int) error {
+func WriteResponse(w http.ResponseWriter, content interface{}, httpStatusCode int) error {
 	jsonResp, err := json.Marshal(content)
 	if err != nil {
-		writeErrorResponse(w, err, http.StatusInternalServerError)
+		WriteErrorResponse(w, err, http.StatusInternalServerError)
 		return err
 	}
 	w.Header().Set("Content-Type", CONTENT_TYPE)
@@ -62,14 +62,14 @@ func writeResponse(w http.ResponseWriter, content interface{}, httpStatusCode in
 	return nil
 }
 
-func writeErrorResponse(w http.ResponseWriter, err error, httpStatusCode int) {
+func WriteErrorResponse(w http.ResponseWriter, err error, httpStatusCode int) {
 	jsonError, _ := json.Marshal(errResp{err.Error()})
 	w.Header().Set("Content-Type", CONTENT_TYPE)
 	w.WriteHeader(httpStatusCode)
 	w.Write((jsonError))
 }
 
-func readResponse(r *http.Response, respBody interface{}) error {
+func ReadResponse(r *http.Response, respBody interface{}) error {
 	resBodyJson, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return fmt.Errorf("unable to read response body. %s", err.Error())

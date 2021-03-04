@@ -40,13 +40,13 @@ func (n *Node) updateStatusDifferences(peerStatus Status) {
 func (n *Node) postStatus(peer connectionInfo) (Status, error) {
 	url := fmt.Sprintf("http://%s/node/status", peer.tcpAddress())
 	nodeStatus := Status{n.info, n.peers, n.db}
-	res, err := writeRequest(url, nodeStatus)
+	res, err := WriteRequest(url, nodeStatus)
 	if err != nil {
 		return Status{}, err
 	}
 
 	peerStatus := Status{}
-	err = readResponse(res, &peerStatus)
+	err = ReadResponse(res, &peerStatus)
 	if err != nil {
 		return Status{}, err
 	}

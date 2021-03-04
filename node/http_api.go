@@ -13,7 +13,7 @@ const queryKeyPort = "port"
 const queryKeyID = "id"
 
 func (n *Node) handlerGetBlockChain(w http.ResponseWriter, r *http.Request) {
-	err := writeResponse(w, n.db.Blocks, http.StatusOK)
+	err := WriteResponse(w, n.db.Blocks, http.StatusOK)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -23,7 +23,7 @@ func (n *Node) handlerGetBlockChain(w http.ResponseWriter, r *http.Request) {
 
 func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != CONTENT_TYPE {
-		writeErrorResponse(w, fmt.Errorf("Content Type is not application/json"), http.StatusUnsupportedMediaType)
+		WriteErrorResponse(w, fmt.Errorf("Content Type is not application/json"), http.StatusUnsupportedMediaType)
 		return
 	}
 
@@ -33,13 +33,13 @@ func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&payload)
 	if err != nil {
-		writeErrorResponse(w, err, http.StatusBadRequest)
+		WriteErrorResponse(w, err, http.StatusBadRequest)
 		return
 	}
 
 	err = n.addPendingTransaction(payload)
 	if err != nil {
-		writeErrorResponse(w, fmt.Errorf("Could not authenticate transaction"), http.StatusBadRequest)
+		WriteErrorResponse(w, fmt.Errorf("Could not authenticate transaction"), http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 
 func (n *Node) handlerPostStatus(w http.ResponseWriter, r *http.Request) {
 	peerStatus := Status{}
-	err := readRequestBody(r, &peerStatus)
+	err := ReadRequestBody(r, &peerStatus)
 	if err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func (n *Node) handlerPostStatus(w http.ResponseWriter, r *http.Request) {
 	n.updateStatusDifferences(peerStatus)
 
 	nodeStatus := Status{n.info, n.peers, n.db}
-	err = writeResponse(w, nodeStatus, http.StatusOK)
+	err = WriteResponse(w, nodeStatus, http.StatusOK)
 	if err != nil {
 		fmt.Print(err)
 		return
