@@ -59,7 +59,7 @@ func NewNode(ip string, port uint64, bootstrapPeerIP string, bootstrapPeerPort u
 
 func (n *Node) Start(ctx context.Context) error {
 	go n.mine(ctx)
-	go n.postSync()
+	go n.broadcastStatus()
 
 	return n.serverHttp(ctx)
 }
@@ -98,13 +98,16 @@ func (n *Node) mineTxPool() {
 func (n *Node) getNextTransactionToMine() []database.SignedTransaction {
 	signedTxs := make([]database.SignedTransaction, len(n.txPool))
 
+	idx := 0
 	for _, tx := range n.txPool {
-		signedTxs = append(signedTxs, tx)
+		signedTxs[idx] = tx
+		idx++
 	}
 
 	return signedTxs
 }
 
+// attempts to add the new transaction to the pool.
 func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
 	if ok, err := tx.IsAuthentic(); !ok {
 		fmt.Println("Non-authentic transaction came in. Not adding to pool.")
@@ -120,6 +123,8 @@ func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
 
 	if _, found := n.txPool[signedTxHex]; !found {
 		n.txPool[signedTxHex] = tx
+	} else {
+		return nil
 	}
 
 	fmt.Println("Added transaction to pool.")
@@ -162,7 +167,8 @@ func (n *Node) serverHttp(ctx context.Context) error {
 
 	handler.HandleFunc("/node/blocks", n.handlerGetBlockChain)
 	handler.HandleFunc("/node/transaction", n.handlerPostTransaction)
-	handler.HandleFunc("/node/status", n.handlerPostStatus)
+	handler.HandleFunc("/node/sync/transaction", n.handlerPostSyncTransaction)
+	handler.HandleFunc("/node/sync/status", n.handlerPostStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
 	// This is to ensure the server is closed if/when the context signals done. Most widely used in testing for early termination.

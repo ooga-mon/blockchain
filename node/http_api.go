@@ -43,8 +43,26 @@ func (n *Node) handlerPostTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n.postSync()
+	n.broadcastTransaction(payload)
+}
 
+func (n *Node) handlerPostSyncTransaction(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != CONTENT_TYPE {
+		WriteErrorResponse(w, fmt.Errorf("Content Type is not application/json"), http.StatusUnsupportedMediaType)
+		return
+	}
+
+	var payload database.SignedTransaction
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&payload)
+	if err != nil {
+		WriteErrorResponse(w, err, http.StatusBadRequest)
+		return
+	}
+
+	err = n.addPendingTransaction(payload)
 }
 
 func (n *Node) handlerPostStatus(w http.ResponseWriter, r *http.Request) {

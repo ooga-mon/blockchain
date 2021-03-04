@@ -2,13 +2,40 @@ package node
 
 import (
 	"fmt"
+
+	"github.com/ooga-mon/blockchain/database"
 )
 
-func (n *Node) postSync() {
-	go n.doSync()
+func (n *Node) broadcastTransaction(tx database.SignedTransaction) {
+	go n.doBroadcastTransaction(tx)
 }
 
-func (n *Node) doSync() {
+func (n *Node) doBroadcastTransaction(tx database.SignedTransaction) {
+	for _, peer := range n.peers {
+		err := n.postTransaction(peer, tx)
+		if err != nil {
+			fmt.Print("Removing peer from list.")
+			n.removePeer(peer)
+		}
+	}
+}
+
+func (n *Node) postTransaction(peer connectionInfo, tx database.SignedTransaction) error {
+	url := fmt.Sprintf("http://%s/node/sync/transaction", peer.tcpAddress())
+	res, err := WriteRequest(url, tx)
+	if err != nil {
+		return err
+	}
+
+	res.Body.Close()
+	return nil
+}
+
+func (n *Node) broadcastStatus() {
+	go n.doBroadcastStatus()
+}
+
+func (n *Node) doBroadcastStatus() {
 	fmt.Println("Attempting sync process")
 	for _, peer := range n.peers {
 		fmt.Printf("Starting sync process with %s\n", peer.tcpAddress())
@@ -32,13 +59,8 @@ func (n *Node) doSync() {
 	}
 }
 
-func (n *Node) updateStatusDifferences(peerStatus Status) {
-	n.addUnknownPeers(peerStatus)
-	n.db.Replace(&peerStatus.Blockchain)
-}
-
 func (n *Node) postStatus(peer connectionInfo) (Status, error) {
-	url := fmt.Sprintf("http://%s/node/status", peer.tcpAddress())
+	url := fmt.Sprintf("http://%s/node/sync/status", peer.tcpAddress())
 	nodeStatus := Status{n.info, n.peers, n.db}
 	res, err := WriteRequest(url, nodeStatus)
 	if err != nil {
@@ -52,6 +74,11 @@ func (n *Node) postStatus(peer connectionInfo) (Status, error) {
 	}
 
 	return peerStatus, nil
+}
+
+func (n *Node) updateStatusDifferences(peerStatus Status) {
+	n.addUnknownPeers(peerStatus)
+	n.db.Replace(&peerStatus.Blockchain)
 }
 
 func (n *Node) addUnknownPeers(peerStatus Status) error {
