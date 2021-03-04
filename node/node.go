@@ -90,6 +90,7 @@ func (n *Node) mineTxPool() {
 		n.state.setLastMineTime()
 		fmt.Printf("Mined new block %s at difficulty %d\n", newBlock.BlockHash.Hex(), n.state.curDifficulty)
 		n.db.AddBlock(newBlock)
+		n.removePendingTransactions(pendingBlock.tx)
 	}
 	n.state.setMiningFlag(false)
 }
@@ -121,7 +122,18 @@ func (n *Node) addPendingTransaction(tx database.SignedTransaction) error {
 		n.txPool[signedTxHex] = tx
 	}
 
+	fmt.Println("Added transaction to pool.")
 	return nil
+}
+
+func (n *Node) removePendingTransactions(txs []database.SignedTransaction) {
+	for _, signedTx := range txs {
+		hash, err := signedTx.Hash()
+		if err != nil {
+			continue
+		}
+		delete(n.txPool, hash.Hex())
+	}
 }
 
 func (n *Node) addPeer(con connectionInfo) {
@@ -149,7 +161,7 @@ func (n *Node) serverHttp(ctx context.Context) error {
 	handler := http.NewServeMux()
 
 	handler.HandleFunc("/node/blocks", n.handlerGetBlockChain)
-	handler.HandleFunc("/node/Transaction", n.handlerPostTransaction)
+	handler.HandleFunc("/node/transaction", n.handlerPostTransaction)
 	handler.HandleFunc("/node/status", n.handlerPostStatus)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%d", n.info.Port), Handler: handler}
