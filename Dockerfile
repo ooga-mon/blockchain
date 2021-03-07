@@ -1,7 +1,5 @@
 ARG GO_VERSION=1.16
-FROM golang:${GO_VERSION} as builder
-
-ENV APP_NAME="main"
+FROM golang:${GO_VERSION}-buster as builder
 
 # Create and change to the app directory.
 WORKDIR /app
@@ -18,8 +16,11 @@ COPY . .
 # Build the binary.
 RUN go build -mod=readonly -v -o server ./cmd/node/main.go
 
-# Use scratch for clean container.
-FROM scratch
+# Use slim for smaller container size.
+FROM debian:buster-slim
+RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*h
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app /
