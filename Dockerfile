@@ -13,14 +13,17 @@ RUN go mod download
 # Copy local code to the container image.
 COPY . .
 
+#disable crosscompiling 
+ENV CGO_ENABLED=0
+
+#compile linux only
+ENV GOOS=linux
+
 # Build the binary.
-RUN go build -mod=readonly -v -o server ./cmd/node/main.go
+RUN go build  -ldflags '-w -s' -a -installsuffix cgo -o server ./cmd/node/main.go
 
 # Use slim for smaller container size.
-FROM debian:buster-slim
-RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*h
+FROM scratch
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app /
