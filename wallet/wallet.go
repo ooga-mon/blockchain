@@ -9,7 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ooga-mon/blockchain/database"
+	"github.com/octothorped/blockchain/database"
 )
 
 type Wallet struct {
@@ -29,7 +29,6 @@ func NewWallet() Wallet {
 	publicKeyHash := crypto.Keccak256(publicKeyBytes[1:])
 
 	address := common.BytesToAddress(publicKeyHash[12:])
-
 	return Wallet{0, address, privateKey}
 }
 

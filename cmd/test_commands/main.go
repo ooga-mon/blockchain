@@ -12,9 +12,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ooga-mon/blockchain/database"
-	"github.com/ooga-mon/blockchain/node"
-	"github.com/ooga-mon/blockchain/wallet"
+	"github.com/octothorped/blockchain/database"
+	"github.com/octothorped/blockchain/node"
+	"github.com/octothorped/blockchain/wallet"
 )
 
 func main() {

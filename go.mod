@@ -1,4 +1,4 @@
-module github.com/ooga-mon/blockchain
+module github.com/octothorped/blockchain
 
 go 1.16
 

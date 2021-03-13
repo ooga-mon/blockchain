@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ooga-mon/blockchain/database"
+	"github.com/octothorped/blockchain/database"
 )
 
 const DefaultIP = "127.0.0.1"

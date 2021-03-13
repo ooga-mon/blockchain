@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ooga-mon/blockchain/database"
+	"github.com/octothorped/blockchain/database"
 )
 
 const queryKeyIP = "ip"

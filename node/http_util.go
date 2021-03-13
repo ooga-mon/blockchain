@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ooga-mon/blockchain/database"
+	"github.com/octothorped/blockchain/database"
 )
 
 const CONTENT_TYPE = "application/json"

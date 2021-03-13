@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ooga-mon/blockchain/node"
+	"github.com/octothorped/blockchain/node"
 )
 
 func main() {

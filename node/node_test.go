@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ooga-mon/blockchain/wallet"
+	"github.com/octothorped/blockchain/wallet"
 )
 
 func TestNodeStart(t *testing.T) {

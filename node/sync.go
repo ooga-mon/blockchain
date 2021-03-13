@@ -3,7 +3,7 @@ package node
 import (
 	"fmt"
 
-	"github.com/ooga-mon/blockchain/database"
+	"github.com/octothorped/blockchain/database"
 )
 
 func (n *Node) broadcastTransaction(tx database.SignedTransaction) {
